@@ -1,1 +1,1 @@
-# practice
+# Python code samples
