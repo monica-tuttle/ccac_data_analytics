@@ -1,1 +1,1 @@
-# Python and R code samples in Jupyter Notebook
+# Python and R code samples
