@@ -1,1 +1,1 @@
-# Python and R code samples
+# Coding samples in Python, R, and PostgreSQL
