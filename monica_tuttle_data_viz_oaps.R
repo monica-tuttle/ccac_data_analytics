@@ -1,16 +1,20 @@
 ################################################################################
+
+# Author: Monica Tuttle
+# Topic: Older Adult Protective Services Data Visualizations
+# Updated 9/2/22
+
+################################################################################
                               
-                              # IMPORT DATA 
+                              # STEP ONE - IMPORT DATA 
 #===============================================================================
 library(tidyverse)
 
-#RColorBrewer::display.brewer.all()
+dataset <- read.csv("[INSERT FILE PATH].oaps.csv")
 
-dataset <- read.csv("C:\\OneDrive - Allegheny County\\Documents\\R\\oaps.csv")
+allegations <- read.csv("[INSERT FILE PATH].allegations.csv")
 
-allegations <- read.csv("C:\\OneDrive - Allegheny County\\Documents\\R\\allegations.csv")
-
-reasons_not_closed_20_days <- read.csv("C:\\OneDrive - Allegheny County\\Documents\\R\\not_in_20_days.csv")
+reasons_not_closed_20_days <- read.csv("[INSERT FILE PATH].not_in_20_days.csv")
 
 oaps <- select(dataset, CLIENT_ID, START_DATE, invest_is_complete_date_d, 
                provider_name_cleaned, initial_invest_or_reassessment, 
@@ -20,7 +24,7 @@ oaps <- select(dataset, CLIENT_ID, START_DATE, invest_is_complete_date_d,
 
 ################################################################################
 
-                              # FILTER IMPORTED DATA
+                              # STEP TWO - FILTER IMPORTED DATA
 #===============================================================================
 
 oaps_remove_no_diff_in_days_calculated <- filter(oaps, difference_in_days != "")
@@ -34,92 +38,95 @@ reasons_not_closed_ignore_abandonment <- filter(reasons_not_closed_20_days_ignor
                                     
 ################################################################################
 
-                              # VISUALIZE DATA
+                              # STEP THREE - VISUALIZE DATA
 #===============================================================================
 
 # Case count by agency
-ggplot(oaps_remove_no_diff_in_days_calculated, aes(provider_name_cleaned, fill = provider_name_cleaned)) +
+ggplot(oaps_remove_no_diff_in_days_calculated, aes(fct_rev(fct_infreq(provider_name_cleaned)), fill = provider_name_cleaned)) +
   geom_bar() +
-  geom_text(aes(label = ..count..), stat = "count", vjust = 1.5, colour = "white") +
-  labs(x = "agency", title = "CASE COUNT by Agency", subtitle = paste("N = ", count(oaps_remove_no_diff_in_days_calculated))) +
-  theme(plot.title = element_text(color = "#6A5ACD", face = "bold", size = 20), legend.position = "none", 
-        axis.title.x = element_text(color = "#6A5ACD", face = "bold"), axis.title.y = element_text(color = "#6A5ACD", face = "bold"))
+  geom_text(aes(label = ..count..), stat = "count", vjust = 1.5, colour = "white", size = 7) +
+  labs(x = "agency", y = "count", title = "Case Count by Agency", subtitle = paste("n = ", count(oaps_remove_no_diff_in_days_calculated))) +
+  theme(plot.title = element_text(color = "#6A5ACD", face = "bold", size = 22), plot.subtitle = element_text(size = 18), legend.position = "none", 
+        axis.title.x = element_text(color = "#6A5ACD", face = "bold", size = 18), axis.title.y = element_text(color = "#6A5ACD", face = "bold", size = 18),
+        axis.text = element_text(size = 16))
 
 # Comparing the average amount of days to complete investigations by agency 
 
-eval(substitute(ggplot(aes(x = provider_name_cleaned, y = difference_in_days, 
+eval(substitute(ggplot(aes(x = reorder(provider_name_cleaned, -difference_in_days), y = difference_in_days, 
     fill = provider_name_cleaned), 
     data = oaps_remove_no_diff_in_days_calculated) +
     stat_summary(fun = median, geom = "bar") +
-    stat_summary(aes(label=round(..y..)), fun = median, geom = "text", size = 4, 
+    stat_summary(aes(label=round(..y..)), fun = median, geom = "text", size = 6, 
         hjust = 2, colour = "white") + 
     coord_flip(ylim = c(0, 70)) +
-    #coord_cartesian(ylim = c(0, 70)) +
     labs(x = "agency", y = "median days", fill = "agency", 
-      title = "Days to Complete Investigations by Agency - MEDIAN",
-      subtitle = paste("N = ", count(oaps_remove_no_diff_in_days_calculated))) +
-      theme(plot.title = element_text(color = "#6A5ACD", face = "bold", size = 20), 
-            axis.title.x = element_text(color = "#6A5ACD", face = "bold"), axis.title.y = element_text(color = "#6A5ACD", face = "bold"))))
+    title = "MEDIAN Days to Complete Investigations by Agency",
+    subtitle = paste("n = ", count(oaps_remove_no_diff_in_days_calculated))) +
+    theme(legend.position = "none", plot.title = element_text(color = "#6A5ACD", face = "bold", size = 22), plot.subtitle = element_text(size = 18), 
+          axis.title.x = element_text(color = "#6A5ACD", face = "bold", size = 18), axis.title.y = element_text(color = "#6A5ACD", face = "bold", size = 18),
+          axis.text = element_text(size = 16))))
 
-eval(substitute(ggplot(aes(x = provider_name_cleaned, y = difference_in_days, 
+eval(substitute(ggplot(aes(x = reorder(provider_name_cleaned, -difference_in_days), y = difference_in_days, 
     fill = provider_name_cleaned), data = oaps_remove_no_diff_in_days_calculated) +
     stat_summary(fun = mean, geom = "bar") +
     stat_summary(aes(label=round(..y..)), fun = mean, 
-      geom = "text", size = 4, hjust = 2, colour = "white") +
-      coord_flip(ylim = c(0, 70)) +
-      labs(x = "agency", y = "average days", fill = "agency", 
-      title = "Days to Complete Investigations by Agency - MEAN (average)",
-      subtitle = paste("N = ", count(oaps_remove_no_diff_in_days_calculated))) +
-      theme(plot.title = element_text(color = "#6A5ACD", face = "bold", size = 20), 
-            axis.title.x = element_text(color = "#6A5ACD", face = "bold"), axis.title.y = element_text(color = "#6A5ACD", face = "bold")))) 
-      
+    geom = "text", size = 6, hjust = 2, colour = "white") +
+    coord_flip(ylim = c(0, 70)) +
+    labs(x = "agency", y = "average days", fill = "agency", 
+    title = "AVERAGE Days to Complete Investigations by Agency",
+    subtitle = paste("n = ", count(oaps_remove_no_diff_in_days_calculated))) +
+    theme(legend.position = "none", plot.title = element_text(color = "#6A5ACD", face = "bold", size = 22), plot.subtitle = element_text(size = 18),
+          axis.title.x = element_text(color = "#6A5ACD", face = "bold", size = 18), axis.title.y = element_text(color = "#6A5ACD", face = "bold", size = 18), 
+          axis.text = element_text(size = 16))))
 
 #===============================================================================
 
 # Case count of investigations by allegation type
 
-ggplot(allegations, aes(allegations_by_reporter, 
+ggplot(allegations, aes(fct_rev(fct_infreq(allegations_by_reporter)), 
   fill = allegations_by_reporter)) +
   geom_bar() +
-  geom_text(aes(label = ..count..), stat = "count", vjust = 0, colour = "black") +
-  labs(x = "allegation type", title = "CASE COUNT - Allegation Type", 
-    subtitle = paste("N = ", count(allegations))) +
+  geom_text(aes(label = ..count..), stat = "count", vjust = 0, colour = "black", size = 6) +
+  labs(x = "allegation type", title = "Case Count by Allegation Type", 
+    subtitle = paste("n = ", count(allegations))) +
   scale_fill_brewer(palette = "Spectral") +  
   theme(legend.position = "none") +
-  theme(axis.text.x = element_text(angle = 30, hjust = 1)) +
-  theme(plot.title = element_text(color = "#6A5ACD", face = "bold", size = 20), legend.position = "none", 
-        axis.title.x = element_text(color = "#6A5ACD", face = "bold"), axis.title.y = element_text(color = "#6A5ACD", face = "bold")) 
-
+  theme(axis.text.x = element_text(angle = 20, hjust = 1)) +
+  theme(plot.title = element_text(color = "#6A5ACD", face = "bold", size = 22), legend.position = "none", plot.subtitle = element_text(size = 18),
+        axis.title.x = element_text(color = "#6A5ACD", face = "bold", size = 18), axis.title.y = element_text(color = "#6A5ACD", face = "bold", size = 18), 
+        axis.text = element_text(size = 16))
 
 # Comparing the average amount of days to complete investigations by allegation type 
 
-eval(substitute(ggplot(aes(x = allegations_by_reporter, y = difference_in_days, 
+eval(substitute(ggplot(aes(x = reorder(allegations_by_reporter, -difference_in_days), y = difference_in_days, 
   fill = allegations_by_reporter), data = allegations) +
   stat_summary(fun = median, geom = "bar") +
   coord_flip(ylim = c(0, 60)) +
-  stat_summary(aes(label=round(..y..)), fun = median, geom = "text", size = 4, 
+  stat_summary(aes(label=round(..y..)), fun = median, geom = "text", size = 6, 
                 hjust = 1.5) +
   labs(x = "allegation type", y = "median days", fill = "allegation type", 
-    title = "Days to Complete Investigations by Allegation Type - MEDIAN",
-    subtitle = paste("N = ", count(allegations))) +
+    title = "MEDIAN Days to Complete Investigations by Allegation Type",
+    subtitle = paste("n = ", count(allegations))) +
   scale_fill_brewer(palette = "Spectral"))) +
-  theme(plot.title = element_text(color = "#6A5ACD", face = "bold", size = 20), 
-        axis.title.x = element_text(color = "#6A5ACD", face = "bold"), axis.title.y = element_text(color = "#6A5ACD", face = "bold")) 
+  theme(legend.position = "none", plot.title = element_text(color = "#6A5ACD", face = "bold", size = 22), plot.subtitle = element_text(size = 18), 
+        axis.title.x = element_text(color = "#6A5ACD", face = "bold", size = 18), axis.title.y = element_text(color = "#6A5ACD", face = "bold", size = 18),
+        axis.text = element_text(size = 16)) 
 
 
-eval(substitute(ggplot(aes(x = allegations_by_reporter, y = difference_in_days, 
+eval(substitute(ggplot( aes(x = reorder(allegations_by_reporter, -difference_in_days), y = difference_in_days, 
   fill = allegations_by_reporter), 
   data = allegations) +
   coord_flip() +
   stat_summary(fun = mean, geom = "bar") +
-  stat_summary(aes(label=round(..y..)), fun = mean, geom = "text", size = 4, 
+  stat_summary(aes(label=round(..y..)), fun = mean, geom = "text", size = 6, 
                hjust = 1.5) +
   labs(x = "allegation type", y = "average days", fill = "allegation type", 
-    title = "Days to Complete Investigations by Allegation Type - MEAN (average)",
-    subtitle = paste("N = ", count(allegations))) +
+    title = "AVERAGE Days to Complete Investigations by Allegation Type",
+    subtitle = paste("n = ", count(allegations))) +
   scale_fill_brewer(palette = "Spectral"))) +
-  theme(plot.title = element_text(color = "#6A5ACD", face = "bold", size = 20),
-        axis.title.x = element_text(color = "#6A5ACD", face = "bold"), axis.title.y = element_text(color = "#6A5ACD", face = "bold"))
+  theme(legend.position = "none", plot.title = element_text(color = "#6A5ACD", face = "bold", size = 22), plot.subtitle = element_text(size = 18),
+        axis.title.x = element_text(color = "#6A5ACD", face = "bold", size = 18), axis.title.y = element_text(color = "#6A5ACD", face = "bold", size = 18),
+        axis.text = element_text(size = 16))
 
 
 #===============================================================================
@@ -128,25 +135,27 @@ eval(substitute(ggplot(aes(x = allegations_by_reporter, y = difference_in_days,
 # by agency and allegation type
 
 ggplot(allegations, aes(difference_in_days, 
-  allegations_by_reporter, 
+  fct_rev(fct_infreq(allegations_by_reporter)), 
   fill = factor(provider_name_cleaned))) +
   geom_boxplot(outlier.shape = NA) + # removing outliers
   coord_cartesian(xlim = c(0, 200)) +
   labs(x = "days", y = "allegation type", fill = "agency", 
        title = "Duration of Investigations by Agency and Allegation Type",
-       subtitle = paste("N = ", count(allegations))) +
-  theme(plot.title = element_text(color = "#6A5ACD", face = "bold", size = 14),
-        axis.title.x = element_text(color = "#6A5ACD", face = "bold"), axis.title.y = element_text(color = "#6A5ACD", face = "bold"))
+       subtitle = paste("n = ", count(allegations))) +
+  theme(plot.title = element_text(color = "#6A5ACD", face = "bold", size = 22), plot.subtitle = element_text(size = 18),
+        axis.title.x = element_text(color = "#6A5ACD", face = "bold", size = 18), axis.title.y = element_text(color = "#6A5ACD", face = "bold", size = 18),
+        axis.text = element_text(size = 16))
 
 
 ggplot(allegations, aes(difference_in_days, 
-      allegations_by_reporter, fill = factor(provider_name_cleaned))) +
-      geom_boxplot(outlier.size = .7) +
+      fct_rev(fct_infreq(allegations_by_reporter)), fill = factor(provider_name_cleaned))) +
+      geom_boxplot(outlier.size = 1) +
       labs(x = "days", y = "allegation type", fill = "agency", 
         title = "Duration of Investigations by Agency and Allegation Type",
-        subtitle = paste("N = ", count(allegations))) +
-  theme(plot.title = element_text(color = "#6A5ACD", face = "bold", size = 14), 
-        axis.title.x = element_text(color = "#6A5ACD", face = "bold"), axis.title.y = element_text(color = "#6A5ACD", face = "bold")) 
+        subtitle = paste("n = ", count(allegations))) +
+      theme(plot.title = element_text(color = "#6A5ACD", face = "bold", size = 22), plot.subtitle = element_text(size = 18),
+        axis.title.x = element_text(color = "#6A5ACD", face = "bold", size = 18), axis.title.y = element_text(color = "#6A5ACD", face = "bold", size = 18),
+        axis.text = element_text(size = 16)) 
 
 
 #===============================================================================
@@ -154,65 +163,29 @@ ggplot(allegations, aes(difference_in_days,
 # Count of records with reasons identified for why a case wasn't closed in 20 days
 # broken down by allegation type
 
-ggplot(reasons_not_closed_ignore_abandonment, aes(why_no_determ_in_20_days_d, 
+ggplot(reasons_not_closed_ignore_abandonment, aes(fct_rev(fct_infreq(why_no_determ_in_20_days_d)), 
   fill = allegations_by_reporter_d)) +
   geom_bar(position = "dodge") +
   coord_flip() +
   labs(x = "reasons", fill = "allegation", 
     title = "Reasons for not closing cases within 20 days - by Allegation Type",
-    subtitle = paste("N = ", count(reasons_not_closed_ignore_abandonment))) +
+    subtitle = paste("n = ", count(reasons_not_closed_ignore_abandonment))) +
   scale_fill_brewer(palette = "Spectral") +
-  theme(plot.title = element_text(color = "#6A5ACD", face = "bold", size = 14), 
-        axis.title.x = element_text(color = "#6A5ACD", face = "bold"), axis.title.y = element_text(color = "#6A5ACD", face = "bold")) 
+  theme(plot.title = element_text(color = "#6A5ACD", face = "bold", size = 18), plot.subtitle = element_text(size = 16),
+        axis.title.x = element_text(color = "#6A5ACD", face = "bold", size = 16), axis.title.y = element_text(color = "#6A5ACD", face = "bold", size = 16),
+        axis.text = element_text(size = 14))
 
 
 # Count of records with reasons identified for why a case wasn't closed in 20 days
 # broken down by agency
 
-ggplot(reasons_not_closed_ignore_abandonment, aes(why_no_determ_in_20_days_d, 
+ggplot(reasons_not_closed_ignore_abandonment, aes(fct_rev(fct_infreq(why_no_determ_in_20_days_d)), 
   fill = provider_name_cleaned)) +
   geom_bar(position = "dodge") +
   coord_flip() +
   labs(x = "reasons", fill = "agency", 
     title = "Reasons for not closing cases within 20 days - by Agency",
-    subtitle = paste("N = ", count(reasons_not_closed_ignore_abandonment))) +
-  theme(plot.title = element_text(color = "#6A5ACD", face = "bold", size = 14), 
-        axis.title.x = element_text(color = "#6A5ACD", face = "bold"), axis.title.y = element_text(color = "#6A5ACD", face = "bold")) 
-
-#===============================================================================
-# Sandbox
-oaps %>%
-  ggplot( aes(x = provider_name_cleaned, y = difference_in_days, 
-              fill = provider_name_cleaned)) +
-  coord_flip() +
-  geom_boxplot(outlier.size = .6) +
-  geom_jitter(color="black", size=.6, alpha=0.9) +
-  theme(
-    legend.position="none",
-    plot.title = element_text(size=11)
-  ) +
-  ggtitle("Duration of Investigations by Agency") +
-  xlab("agency") +
-  ylab("days")
-
-eval(substitute(ggplot(aes(x = why_no_determ_in_20_days_d, y = difference_in_days, 
-                           fill = allegations_by_reporter_d), 
-                       data = reasons_not_closed_ignore_abandonment) +
-                  stat_summary(fun = median, geom = "bar", position = "dodge") +
-                  #coord_cartesian(ylim = c(0, )) +
-                  coord_flip() +
-                  scale_fill_brewer(palette = "RdPu") + 
-                  labs(x = "reason", y = "median days", fill = "allegation", 
-                       title = "Median Days",
-                       subtitle = paste("N = ", count(reasons_not_closed_ignore_abandonment))))) 
-
-eval(substitute(ggplot(aes(x = why_no_determ_in_20_days_d, y = difference_in_days, 
-                           fill = provider_name_cleaned), 
-                       data = reasons_not_closed_ignore_abandonment) +
-                  stat_summary(fun = median, geom = "bar", position = "dodge") +
-                  #coord_cartesian(ylim = c(0, )) +
-                  coord_flip() +
-                  labs(x = "agency", y = "median days", fill = "agency", 
-                       title = "Median Days",
-                       subtitle = paste("N = ", count(reasons_not_closed_ignore_abandonment))))) 
-
+    subtitle = paste("n = ", count(reasons_not_closed_ignore_abandonment))) +
+  theme(plot.title = element_text(color = "#6A5ACD", face = "bold", size = 18), plot.subtitle = element_text(size = 16), 
+        axis.title.x = element_text(color = "#6A5ACD", face = "bold", size = 16), axis.title.y = element_text(color = "#6A5ACD", face = "bold", size = 16),
+        axis.text = element_text(size = 14)) 
