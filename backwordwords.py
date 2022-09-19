@@ -20,6 +20,6 @@ for index in range(len(word) - 1, - 1, - 1):
     print(word[index], end = "")
 print()
 
-# Here we tell the user how many characters long the word they entered is.
+# Here we tell the user how many characters long the word is.
 
 print("The word or sentence you entered is", len(word), "characters long.")
