@@ -1,1 +1,1 @@
-# Coding samples in Python, R, and PostgreSQL
+# Coding portfolio in Python, R, and PostgreSQL
